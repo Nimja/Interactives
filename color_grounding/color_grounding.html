@@ -1,0 +1,71 @@
+<!--
+    Created by Nimja - 07-2022
+    A camera-based color finding game, using HSL as the basic matching method.
+-->
+<style>
+    .cc_game {
+        width: 100%;
+    }
+
+    .cc_game canvas {
+        width: 100%;
+        height: auto;
+
+    }
+
+    .cc_game table {
+        border-collapse: collapse;
+        margin: 0px;
+        padding: 0px;
+        width: 100%;
+    }
+
+    #cc_switch {
+        margin-left: 5px;
+    }
+
+    .cc_buttons button:disabled {
+        opacity: .25;
+    }
+</style>
+<div class="cc_game">
+    <div id="cc_intro">
+        <h2>Color Grounding Game</h2>
+        <p>Aim your camera at the wanted color. The skip button has a timeout.</p>
+        <p><button class="btn btn-primary">Start game!</button></p>
+        <p>You might need to give access to use your camera.</p>
+        <hr />
+        <p>Why? You can use this as a grounding exercise. Like "Find a blue thing near you". It's up to you to not go
+            back to the same thing again and again.</p>
+        <hr />
+        <p><b>Disclaimer:</b> No data is recorded or saved, everything is purely in your device.</p>
+    </div>
+    <div id="cc_game" style="display: none">
+        <div id="cc_score">Current color: - Colors found: ...</div>
+        <canvas id="cc_display" width="400" height="400"></canvas>
+        <div class="cc_buttons">
+            <table>
+                <tr>
+                    <td><button id="cc_skip" class="btn btn-l btn-default btn-block">Skip color</button></td>
+                    <td><button id="cc_switch" class="btn btn-l btn-default btn-block">Cam</button></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="js/global.js"></script>
+<script src="js/cam.js"></script>
+<script src="js/color.js"></script>
+<script src="js/game.js"></script>
+<script>
+    // And off we go :)
+    var game = new Game(
+        document.getElementById("cc_display"),
+        document.getElementById("cc_intro"),
+        document.getElementById("cc_game"),
+        document.getElementById("cc_score"),
+        document.getElementById("cc_skip"),
+        document.getElementById("cc_switch")
+    );
+</script>
+<a href="https://github.com/Nimja/Interactives/color_grounding" class="btn btn-default btn-l">Source code</a>

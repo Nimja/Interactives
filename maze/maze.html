@@ -1,0 +1,565 @@
+<!--
+    Created by Nimja - 04-2021
+    A variation of the standard maze generation algorithm.
+-->
+<div>
+    <button id="js-maze-refresh" class="btn btn-l btn-default">Re-Generate</button>
+    <button id="js-maze-animate" class="btn btn-l btn-default">Animate</button>
+    <button id="js-maze-instant" class="btn btn-l btn-default">Instant</button>
+    <button id="js-maze-walker" class="btn btn-l btn-default">Spawn Walker</button>
+</div>
+
+<div>
+    <label for="js-maze-slider">Size</label>
+    <input type="range" value="19" step="2" min="3" max="99" id="js-maze-slider" />
+</div>
+
+<canvas id="canvas" width="10" height="10" style="width: 100%; height: auto;"></canvas>
+
+<h2>Rules</h2>
+<p>The generated maze will be 'perfect', as in every point can be reached from every point.</p>
+<ol>
+    <li>Pick a random cell (center), set cell as taken and put on the stack.</li>
+    <li>Look at the last item in the stack. (blue, number is length on stack)</li>
+    <li>Pick a neighbour empty(dark) cell, at random. (green)</li>
+    <li>Is one available?
+        <ul>
+            <li>Yes: Add neighbour cell to the stack. - Set cell as taken. - Basically we "dig" through the walls into
+                this cell.</li>
+            <li>No: Remove the last item from the stack. - We never "dig" into a previously made tunnel, only out of.
+            </li>
+        </ul>
+    </li>
+    <li>If there are items in the stack, go to 2</li>
+</ol>
+<p>Walkers use the "left-hand-rule". Touch the wall with your left hand and keep following it.</p>
+
+<script>
+    // Used in bitwise operations.
+    const DOORWAY_UP = 1; // 0001
+    const DOORWAY_LEFT = 2; // 0010
+    const DOORWAY_DOWN = 4; // 0100
+    const DOORWAY_RIGHT = 8; // 1000
+
+    // Directions in the order we want the mazewalker to use.
+    const WALKER_DIRECTIONS = [
+        DOORWAY_RIGHT,
+        DOORWAY_DOWN,
+        DOORWAY_LEFT,
+        DOORWAY_UP
+    ];
+
+    const XY_RATIO = 9 / 16; // Standard 16:9 ratio.
+
+    class Maze {
+        constructor() {
+            this.setSize(1, 1);
+            this.init();
+        }
+
+        setSize(sizeX, sizeY) {
+            this.sizeX = sizeX;
+            this.sizeY = sizeY;
+            this.maxCorX = this.sizeX - 1;
+            this.maxCorY = this.sizeY - 1;
+            this.sizeLength = this.sizeX * this.sizeY;
+        }
+
+        init() {
+            // Setup the maze size.
+            this.mazeData = new Uint8Array(this.sizeLength);
+            this.mazeDoors = new Uint8Array(this.sizeLength);
+
+            // Init the stack.
+            let start = this.corToI({ x: Math.floor(this.sizeX * .5), y: Math.floor(this.sizeY * .5) }); // Middle of maze.
+            this.stacks = [
+                [start],
+                [start]
+            ]; // Max stack data is WHOLE maze.
+            this.mazeData[start] = 1; // Set cell as taken.
+            this.counter = 0;
+        }
+
+        generateFully() {
+            while (this.hasStepsLeft()) {
+                this.doMazeStepsForStack();
+            }
+        }
+
+        getIsUncalculated(i) {
+            return this.mazeData[i] === 0;
+        }
+        getMazeDoorsForIndex(i) {
+            return this.mazeDoors[i];
+        }
+
+        /**
+         * When all of our stacks are empty, we are done.
+         */
+        hasStepsLeft() {
+            return this.stacks.length > 0
+        }
+
+        doMazeStepsForStack() {
+            let steps = [];
+            // Do step for all stacks.
+            for (let i in this.stacks) {
+                steps.push(this.doMazeStep(this.stacks[i]));
+            }
+            // Run cleanup.
+            this.cleanStacks();
+            return steps;
+        }
+
+        cleanStacks() {
+            // Remove stacks that are 'done'
+            for (var i = (this.stacks.length - 1); i >= 0; i--) {
+                let stack = this.stacks[i];
+                if (stack.length === 0) {
+                    this.stacks.splice(i, 1);
+                }
+            }
+        }
+
+
+        /**
+         * From index to coordinate.
+         */
+        iToCor(i) {
+            let y = Math.floor(i / this.sizeX),
+                x = i - y * this.sizeX
+            return {
+                x: x,
+                y: y
+            }
+        }
+        /**
+         * From coordinate to index.
+         */
+        corToI(xy) {
+            return xy.x + xy.y * this.sizeX;
+        }
+
+        doMazeStep(stack) {
+            // Get last item from stack.
+            let cur = stack[stack.length - 1];
+            // Get random neighbouring cell.
+            let next = this.getRandomNeighbouringCell(cur);
+
+            if (next === false) { // If we have no neighbour...
+                stack.pop(); // Remove the last one.
+            } else { // If we have a neighbour.
+                stack.push(next.i); // Add it to the stack.
+                this.mazeData[next.i] = 1; // Set cell taken.
+                this.counter++;
+                if (this.counter % 200 === 0) { // Every x positive steps, split :)
+                    this.stacks.push([next.i]);
+                }
+                this.setMazeDoors(cur, next);
+            }
+            return {
+                cur: cur,
+                next: next,
+                stack: stack
+            };
+        }
+
+        /**
+         * Set the doorways of the maze, using bit magic!
+         *
+         * The next cell is the one we move in to, so if we have a doorway to the left, the next cell needs one on the right.
+         */
+        setMazeDoors(cur, next) {
+            if (next.xp === -1) { // Go left.
+                this.mazeDoors[cur] |= DOORWAY_LEFT;
+                this.mazeDoors[next.i] |= DOORWAY_RIGHT;
+            } else if (next.xp === 1) { // Go right.
+                this.mazeDoors[cur] |= DOORWAY_RIGHT;
+                this.mazeDoors[next.i] |= DOORWAY_LEFT;
+            } else if (next.yp === -1) { // Go up.
+                this.mazeDoors[cur] |= DOORWAY_UP;
+                this.mazeDoors[next.i] |= DOORWAY_DOWN;
+            } else if (next.yp === 1) { // Go down.
+                this.mazeDoors[cur] |= DOORWAY_DOWN;
+                this.mazeDoors[next.i] |= DOORWAY_UP;
+            }
+        }
+
+        /**
+         * Get neighbouring cell.
+         *
+         * Returns the index and the move we made.
+         */
+        getRandomNeighbouringCell(i) {
+            let cor = this.iToCor(i);
+            let options = [];
+            if (cor.x > 0) { // Check left.
+                this.addIndexIfEmpty(options, cor, -1, 0);
+            }
+            if (cor.x < this.maxCorX) { // Check right.
+                this.addIndexIfEmpty(options, cor, 1, 0);
+            }
+            if (cor.y > 0) { // Check up.
+                this.addIndexIfEmpty(options, cor, 0, -1);
+            }
+            if (cor.y < this.maxCorY) { // Check down.
+                this.addIndexIfEmpty(options, cor, 0, 1);
+            }
+            //Check how many we found.
+            if (options.length === 0) { // No neighbouring cells.
+                return false;
+            } else if (options.length === 1) { // One neighbouring cell.
+                return options[0];
+            } else { // 2 - 4, pick one at random.
+                return options[Math.floor(Math.random() * options.length)];
+            }
+        }
+        /**
+         * Check if this one is empty, if so, add it.
+         */
+        addIndexIfEmpty(options, cor, xp, yp) {
+            let i = this.corToI({
+                x: cor.x + xp,
+                y: cor.y + yp
+            });
+            if (this.mazeData[i] === 0) {
+                options.push({
+                    i: i,
+                    xp: xp,
+                    yp: yp
+                });
+            }
+        }
+    }
+
+    class MazeDrawer {
+        constructor(maze) {
+            // Colors
+            this.colors = {
+                'background': 'white',
+                'unfinished': '#666',
+                'walls': 'black',
+                'walker': '#090',
+                'stackCurrent': '#9cf',
+                'stackFuture': '#9f9',
+                'stackLine': 'rgba(0, 64, 128, .5)'
+            }
+
+            // Canvas init.
+            this.canvas = document.getElementById('canvas');
+            this.ctx = this.canvas.getContext('2d');
+            window.addEventListener('resize', this.updateCanvas.bind(this));
+            this.maze = maze;
+            this.doAnimate = true;
+            this.updateCanvas();
+        }
+
+        generate() {
+            this.init();
+            this.draw();
+            if (this.doAnimate) {
+                this.startAnimation();
+            } else {
+                this.drawInstant();
+            }
+        }
+
+        init() {
+            this.stopAnimation();
+            this.maze.init();
+            this.walkers = [];
+
+            // Update render size.
+            this.box.xStep = this.box.w / this.maze.sizeX;
+            this.box.yStep = this.box.h / this.maze.sizeY;
+            this.ctx.lineWidth = Math.round(Math.max(1, this.box.xStep / 7));
+        }
+
+
+        /**
+         * On window resize (like rotating the phone), we have to recalculate.
+         */
+        updateCanvas() {
+            let resolutionX = parseInt(this.canvas.clientWidth);
+            let resolutionY = Math.round(resolutionX * XY_RATIO);
+            this.canvas.width = resolutionX;
+            this.canvas.height = resolutionY;
+            this.box = {
+                w: resolutionX,
+                h: resolutionY
+            };
+            this.ctx.textAlign = "center";
+            this.ctx.lineCap = "round";
+            this.ctx.lineJoin = "round";
+            this.box.xStep = (this.box.w / this.maze.sizeX);
+            this.box.yStep = (this.box.h / this.maze.sizeY);
+            this.draw();
+        }
+
+        /**
+         * Draw the maze.
+         *
+         * So because cells share walls, I work with bits.
+         * If the 0001 (1) bit is set, we do NOT draw the line at the top of this cell.
+         * If the 0010 (2) bit is set, we do NOT draw the line at the left of this cell.
+         *
+         * During creation, we keep a list of walls we dig through.
+         *
+         * In theory, the top row and the left row should not draw it either, since it's above them.
+         * The last
+         */
+        draw() {
+            let ctx = this.ctx,
+                cor, cur;
+            ctx.fillStyle = this.colors.background;
+            ctx.fillRect(0, 0, this.box.w, this.box.h);
+            ctx.fillStyle = this.colors.unfinished; // For cells that are not yet dug out.
+            ctx.beginPath();
+            ctx.strokeStyle = this.colors.walls;
+            for (let i = 0; i < this.maze.sizeLength; i++) {
+                cor = this.iToCanvasCor(i);
+                // During animation, the cell is not yet dug out, this is very inefficient, but gets better the less cells we have to do.
+                if (this.maze.getIsUncalculated(i)) {
+                    ctx.fillRect(cor.x, cor.y, this.box.xStep, this.box.yStep);
+                }
+                cur = this.maze.getMazeDoorsForIndex(i);
+                if (cur == 3) { // No lines.
+                    continue;
+                }
+                if (!(cur & DOORWAY_UP)) { // 1 bit is set, skip top line.
+                    ctx.moveTo(cor.x, cor.y);
+                    ctx.lineTo(cor.x + this.box.xStep, cor.y);
+                }
+                if (!(cur & DOORWAY_LEFT)) { // 2 bit is set, skip left line.
+                    ctx.moveTo(cor.x, cor.y);
+                    ctx.lineTo(cor.x, cor.y + this.box.yStep);
+                }
+            }
+            // Draw the rightmost and bottom most lines in one go.
+            ctx.moveTo(this.box.w, 0);
+            ctx.lineTo(this.box.w, this.box.h);
+            ctx.lineTo(0, this.box.h);
+            ctx.stroke();
+        }
+
+        iToCanvasCor(i) {
+            let cor = this.maze.iToCor(i);
+            return {
+                x: (cor.x * this.box.xStep),
+                y: (cor.y * this.box.yStep)
+            }
+        }
+
+        switchAnimate() {
+            this.doAnimate = true;
+        }
+        switchInstant() {
+            this.doAnimate = false;
+            if (this.interval) { // We are still in animation, we finish it instantly.
+                this.stopAnimation();
+                this.drawInstant();
+            }
+        }
+
+        startAnimation(speed) {
+            this.stopAnimation();
+            let milliseconds = Math.max(20, 1000 / (this.maze.sizeLength / 25));
+            this.interval = setInterval(this.drawStep.bind(this), milliseconds);
+        }
+
+        stopAnimation() {
+            if (this.interval) {
+                clearInterval(this.interval);
+                this.interval = undefined;
+            }
+        }
+
+        drawInstant() {
+            this.maze.generateFully();
+            this.draw();
+        }
+
+
+        /**
+         * Draw a single step.
+         *
+         * Draw the maze first, then draw the blue and green blocks to visualize the current step.
+         */
+        drawStep() {
+            if (!this.maze.hasStepsLeft()) {
+                this.stopAnimation();
+                this.draw();
+                return;
+            }
+            let steps = this.maze.doMazeStepsForStack();
+            this.draw();
+            for (let i in steps) {
+                this.drawStackInformation(steps[i]);
+            }
+        }
+
+        drawStackInformation(step) {
+            let stack = step.stack;
+            // Draw the current and next blocks.
+            let ctx = this.ctx;
+            ctx.fillStyle = this.colors.stackCurrent; // Blue
+            let cor = this.iToCanvasCor(step.cur);
+            ctx.fillRect(cor.x, cor.y, this.box.xStep, this.box.yStep);
+            // Draw neighbouring block, if present.
+            if (step.next !== false) {
+                ctx.fillStyle = this.colors.stackFuture; // Green.
+                cor = this.iToCanvasCor(step.next.i);
+                ctx.fillRect(cor.x, cor.y, this.box.xStep, this.box.yStep);
+            }
+            // Draw current stack line.
+            ctx.beginPath();
+            ctx.strokeStyle = this.colors.stackLine;
+            let xp = this.box.xStep * .5,
+                yp = this.box.yStep * .5;
+            for (let i = 0; i < stack.length; i++) {
+                cor = this.iToCanvasCor(stack[i]);
+                if (i == 0) {
+                    ctx.moveTo(cor.x + xp, cor.y + yp);
+                } else {
+                    ctx.lineTo(cor.x + xp, cor.y + yp);
+                }
+            }
+            ctx.stroke();
+        }
+
+        addWalker() {
+            if (this.maze.hasStepsLeft()) {
+                this.stopAnimation();
+                this.drawInstant();
+            }
+            if (this.walkers.length === 0) {
+                this.stopAnimation();
+                this.interval = setInterval(this.drawMazeWalkers.bind(this), 120);
+            }
+            this.walkers.push(new MazeWalker(this.maze));
+        }
+
+        drawMazeWalkers() {
+            let ctx = this.ctx;
+            let xp = this.box.xStep * .1,
+                yp = this.box.yStep * .1,
+                xw = this.box.xStep * .8,
+                yw = this.box.xStep * .8,
+                xc = this.box.xStep * .5,
+                yc = this.box.xStep * .5,
+                radius = this.box.xStep * .3;
+            for (let i in this.walkers) {
+                let walker = this.walkers[i];
+                // Erase previous step.
+                let cor = this.iToCanvasCor(walker.index);
+                ctx.fillStyle = this.colors.background;
+                ctx.fillRect(cor.x + xp, cor.y + yp, xw, yw);
+
+                // Do step.
+                walker.doStep();
+
+                // Render current step.
+                cor = this.iToCanvasCor(walker.index);
+                ctx.strokeStyle = walker.color;
+                ctx.beginPath();
+                let angle = walker.getAngle();
+                ctx.arc(cor.x + xc, cor.y + yc, radius, angle - .1, angle + .1, false);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(cor.x + xc, cor.y + yc, radius * .5, 0, Math.PI * 2, false);
+                ctx.stroke();
+
+            }
+        }
+
+    }
+
+    /**
+     * Very simple mazewalker. They just use the left/right hand rule.
+     */
+    class MazeWalker {
+        constructor(maze) {
+            this.maze = maze;
+            this.init();
+            this.justTurned = false;
+            this.color = 'hsl(' + Math.floor(Math.random() * 360) + ', 90%, 50%)';
+        }
+
+        init() {
+            this.index = Math.floor(Math.random() * this.maze.sizeLength);
+            this.direction = Math.floor(Math.random() * WALKER_DIRECTIONS.length);
+        }
+
+        doStep() {
+            let doorways = this.maze.getMazeDoorsForIndex(this.index);
+
+            let beforeDir = (this.direction + WALKER_DIRECTIONS.length - 1) % WALKER_DIRECTIONS.length;
+            let currentDir = this.direction;
+            let nextDir = (this.direction + 1) % WALKER_DIRECTIONS.length;
+
+            //Check if we have a wall left of us and we didn't just turn (as it would mean going back).
+            if (!this.justTurned && this.canMoveIntoDirection(beforeDir)) { // Turn left?
+                this.direction = beforeDir;
+                this.justTurned = true;
+                //Can we go straight?
+            } else if (this.canMoveIntoDirection(currentDir)) { // Go straight.
+                this.moveIntoDirection(currentDir);
+                this.justTurned = false;
+            } else { // Turn right.
+                this.direction = nextDir;
+                this.justTurned = false;
+            }
+        }
+
+        canMoveIntoDirection(dir) {
+            let doorways = this.maze.getMazeDoorsForIndex(this.index);
+            return doorways & WALKER_DIRECTIONS[dir];
+        }
+
+        moveIntoDirection(dir) {
+            let currentDoorway = WALKER_DIRECTIONS[dir];
+            // Move into next cell.
+            let cor = this.maze.iToCor(this.index);
+            if (currentDoorway === DOORWAY_LEFT) {
+                cor.x -= 1;
+            } else if (currentDoorway === DOORWAY_RIGHT) {
+                cor.x += 1;
+            } else if (currentDoorway === DOORWAY_UP) {
+                cor.y -= 1;
+            } else if (currentDoorway === DOORWAY_DOWN) {
+                cor.y += 1;
+            }
+            this.index = this.maze.corToI(cor);
+        }
+
+        /**
+         * Get angle for rendering.
+         */
+        getAngle() {
+            let angle = this.direction / WALKER_DIRECTIONS.length * Math.PI * 2;
+            return angle;
+        }
+
+        getColor() {
+            this.color;
+        }
+    }
+
+    let slider = document.getElementById('js-maze-slider');
+    var maze = new Maze(15);
+    var mazeDrawer = new MazeDrawer(maze);
+
+    function updateMaze() {
+        let size = parseInt(slider.value);
+        maze.setSize(size, Math.round(size * XY_RATIO));
+        mazeDrawer.generate();
+    }
+    slider.addEventListener('change', updateMaze);
+    document.getElementById('js-maze-refresh').addEventListener('click', updateMaze);
+    document.getElementById('js-maze-animate').addEventListener('click', mazeDrawer.switchAnimate.bind(mazeDrawer));
+    document.getElementById('js-maze-instant').addEventListener('click', mazeDrawer.switchInstant.bind(mazeDrawer));
+    document.getElementById('js-maze-walker').addEventListener('click', mazeDrawer.addWalker.bind(mazeDrawer));
+
+    updateMaze();
+</script>
+<a href="https://github.com/Nimja/Interactives/maze" class="btn btn-default btn-l">Source code</a>
