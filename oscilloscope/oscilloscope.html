@@ -1,0 +1,86 @@
+<div>
+    <h2>Oscilloscope Sound Generator</h2>
+    <p>Download the WAV and play it on a real oscilloscope or an emulator. - <a
+            href="https://www.oscilloscopemusic.com/osci.php" class="btn btn-default">Free emulator software</a></p>
+    <p>
+        <a id="download" href="#" class="btn btn-success" style="display: none;">Download sound file</a> - This
+        soundfile is generated every time you load the page.
+    </p>
+</div>
+<table>
+    <tr>
+        <td style="vertical-align: top;">
+            SVG - Intention.<br />
+            <div id="svgHolder" style="width: 300px; border: 1px solid green;">
+                <svg viewBox="0 0 20 20" stroke="black" stroke-width="1%" stroke-linecap="round" fill="transparent"
+                    stroke-linejoin="round">
+                    <path d="
+    M 1 7 L 1.5 7 C 3 7 3 5.5 2 5 S 1 3 2.5 3 L 3 3
+
+    M 5.5 3 A 2 2 0 1 0 5.501 3
+
+    m 2.999 0 l 0 2.5 a 1 1 0 0 0 3 0 l 0 -2.5
+
+    M 12.5 7 L 12.5 3 15 7 15 3
+
+    M 16.5 3 L 16.5 7 A 1 1 0 0 0 16.5 3
+
+    M 18 9.5 q -2 2 -4 0 t -4 0 -4 0 -4 0
+
+    M 2 11.5 q 2 -2 4 0 t 4 0 4 0 4 0
+
+    M 18.863469,16.024091 c -0.309394,0.500925 -2.121562,2.65195 -3.06448,1.723768 -0.942914,-0.928182 -0.441991,-2.902414 0.176791,-3.418071 0.618788,-0.515656 1.267043,-0.500923 1.25231,0.250463 -0.01478,0.751386 -0.810317,1.605903 -1.591172,1.591172 -0.78085,-0.01478 -2.047895,0.02946 -2.35729,-1.001849 -0.309394,-1.031316 0.942918,-1.812167 0.383062,-0.01478 -0.559859,1.797435 -1.104982,2.740351 -1.34071,2.710885 -0.23573,-0.02946 -1.259899,-3.78007 -0.942917,-3.84533 0.316983,-0.06526 0.500923,1.738501 -0.33886,2.93188 -0.839786,1.193377 -1.48804,1.35544 -1.9005666,0.294662 -0.4125259,-1.060781 0.3977929,-3.167611 0.5009242,-3.314941 0.1031298,-0.147323 -1.149297,3.460941 -1.9742307,3.535936 -0.8249337,0.075 -0.9871154,-0.898716 -0.6777212,-1.915299 0.3093946,-1.016581 0.7513865,-1.384907 1.2523107,-1.443841 0.5009242,-0.05894 0.6777209,0.486193 0.7071873,0.633523 0.029466,0.147322 -0.648255,-1.340709 -1.5469719,0.265196 C 6.5024177,16.613372 5.5005694,16.687036 4.8081152,15.89145 4.1156685,15.095911 4.5281943,13.416342 5.0438515,14.035131 5.5595089,14.65392 5.3090468,16.981744 4.7786565,17.541601 4.248266,18.101458 3.5116127,17.92466 3.3053499,16.731282 3.0990868,15.537904 3.1285531,15.22851 3.2169526,15.257976 c 0.088399,0.02946 -0.4861912,2.622484 -1.119713,2.622484 -0.6335217,0 -0.9134501,-1.208109 -0.3535936,-3.712732
+
+                    "></path>
+                </svg>
+
+            </div>
+        </td>
+        <td style="vertical-align: top;">
+            Canvas - Redrawn<br />
+            <canvas id="example" width="300" height="300" style="display: inline; border: 1px solid red;"></canvas>
+        </td>
+    </tr>
+</table>
+<div>
+    <h3>How it works</h3>
+    <ol>
+        <li>Parse the drawing instructions into different shapes.</li>
+        <li>Calculate the full length and store intermedia lookup.</li>
+        <li>Create lookup for points on each line with equal distance from each other.</li>
+        <li>This lookup is used while drawing the canvas or the wave file.</li>
+    </ol>
+    <p>The canvas uses the same instructions and lookup to draw as the sound does, with these additional features for
+        visibility.</p>
+    <ul>
+        <li>The start is marked with a green square.</li>
+        <li>Each shape segment is colored from start to finish with red to blue.</li>
+        <li>The whole line is shaded light to dark, with grey lines showing the connectivity.</li>
+    </ul>
+    <p>
+        Unfortunately, because I need to use inline svg data, I cannot allow people to upload their own image. If they
+        really want to, you can use the source code.
+    </p>
+    <p>
+        Uses the excellent <a href="https://github.com/rochars/wavefile">rochars/wavefile</a> javascript library to
+        render to sound.
+    </p>
+</div>
+
+<div>
+    <h3>SVG compatibility</h3>
+    <p>The following support has been built in, more support could be added in source.</p>
+    <ul>
+        <li>The third number of the svg.viewbox is used to get a square shape and to know the scale of the drawing.</li>
+        <li>The "d" attribute of the first path in the svg is used for the drawing, other parts are ignored.</li>
+        <li>Absolute and relative positioning.</li>
+        <li>M / m - Move</li>
+        <li>L / l - Straight lines.</li>
+        <li>A / a - Partial and full arcs, however ellipses are not supported.</li>
+        <li>Q / q / T / t - Quadratic bezier curves and the continuation of them.</li>
+        <li>C / c / S / s - Qubic bezier curves and the continuation of them.</li>
+        <li>z - Closing the path. - If a new path is started after this, it can be closed as well.</li>
+    </ul>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/wavefile"></script>
+<script type="module" src="./js/main.js"></script>
