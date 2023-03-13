@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Nimja">
+    <title>Date/Time</title>
+    <style>
+        body {
+            background: #111;
+            margin: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        Start of the easy time form and content.
+    -->
+
+    <style>
+        .easytime {
+            font-size: 1em;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+        }
+
+        .easytime table {
+            border-collapse: collapse;
+            margin-top: 50px;
+        }
+
+        .easytime td {
+            border-collapse: collapse;
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .easytime h1,
+        .easytime h2,
+        .easytime h3 {
+            font-size: 2em;
+            margin: 10px 0px;
+            padding: 0px;
+            font-weight: normal;
+        }
+
+        .easytime h2 {
+            font-size: 1.5em;
+        }
+
+        .easytime h3 {
+            font-size: 1.17em;
+        }
+
+        .easytime .zone {
+            text-align: center;
+        }
+
+        .easytime .zone b {
+            color: #600;
+        }
+
+        .easytime form {
+            display: none;
+            background: #222;
+
+            max-width: 400px;
+            margin: 0px auto;
+            padding: 10px 0px;
+        }
+
+        .easytime form input {
+            display: block;
+            width: auto;
+            background: white;
+            color: black;
+            border: 1px solid black;
+            padding: 3px;
+            margin: 5px;
+            width: 200px;
+            margin: 10px auto;
+            font-size: 1em;
+        }
+
+        .easytime button {
+            display: block;
+            width: 200px;
+            background: #666;
+            color: white;
+            border: 1px solid #777;
+            border-radius: 4px;
+            max-width: 400px;
+            padding: 3px;
+            margin: 0px auto;
+            font-size: 1.2em;
+        }
+
+        .easytime .output {
+            text-align: center;
+            max-width: 400px;
+            margin: 0px auto;
+            padding: 10px 0px;
+        }
+
+        .easytime .output a {
+            color: #bdf;
+        }
+
+        #js-et-share {
+            margin-top: 50px;
+        }
+
+        #js-et-message {
+            visibility: hidden;
+        }
+    </style>
+    <div class="easytime">
+        <form method="get">
+            <input name="title" placeholder="Title (optional)" />
+            <div class="zone"></div>
+            <input name="date" type="date" required />
+            <input name="time" type="time" required />
+            <button type="submit" value="Submit">Submit</button>
+        </form>
+        <div class="output">
+            <h1>Please enable javascript!</h1>
+            <h2></h2>
+            <h3></h3>
+            <div>
+                <button id="js-et-share">Share</button>
+                <div id="js-et-message">Copied to clipboard!</div>
+            </div>
+            <div><a href="?">Create your own...</a></div>
+        </div>
+    </div>
+    <script>
+        class EasyTime {
+            constructor() {
+                // The HTML objects we're working with.
+                this.obj = {
+                    // Input fields.
+                    'form': document.querySelector(".easytime form"),
+                    'title': document.querySelector(".easytime input[name='title']"),
+                    'zone': document.querySelector(".easytime .zone"),
+                    'date': document.querySelector(".easytime input[name='date']"),
+                    'time': document.querySelector(".easytime input[name='time']"),
+                    // Output fields.
+                    'output': document.querySelector(".easytime .output"),
+                    'out_title': document.querySelector(".easytime .output h1"),
+                    'countdown': document.querySelector(".easytime .output h2"),
+                    'out_date': document.querySelector(".easytime .output h3"),
+                    // Share button.
+                    'btn_share': document.getElementById('js-et-share'),
+                    'save_message': document.getElementById('js-et-message'),
+                };
+                // Setup local values.
+                this.local = Intl.DateTimeFormat().resolvedOptions();
+                // Parse GET parameters.
+                const urlParams = new URLSearchParams(window.location.search);
+                if (!!urlParams.get('ts')) {
+                    this.setValues(urlParams.get('ts'), urlParams.get('title'));
+                    if (!!urlParams.get('edit')) { // Values in edit mode.
+                        this.showForm();
+                    } else { // Values in output mode.
+                        this.showOutput();
+                    }
+                } else { // No values, so show form.
+                    this.showForm();
+                }
+            }
+            // Set values to use later.
+            setValues(ts, title) {
+                this.targetTitle = title;
+                let date = new Date(parseInt(ts) * 1000);
+                if (isNaN(date.getTime())) {
+                    return;
+                }
+                this.targetDate = date;
+                this.targetTime = this.toUnixTs(date.getTime());
+            }
+
+            // Show output and start 'countdown'.
+            showOutput() {
+                if (isNaN(this.targetDate.getTime())) {
+                    // this.obj.output.innerText = 'Invalid date!';
+                    return;
+                }
+                this.obj.out_title.innerText = this.targetTitle;
+                this.obj.out_date.innerHTML = [
+                    this.targetDate.toDateString(),
+                    this.targetDate.toLocaleTimeString(),
+                    this.local.timeZone
+                ].join('<br />');
+
+                this.startCountDown();
+
+                // Hook the "share" button.
+                this.obj.btn_share.addEventListener('click', this.onShare.bind(this));
+
+                // Show the output, hide the form.
+                this.obj.form.style.display = "none";
+                this.obj.output.style.display = "block";
+            }
+
+            // If visibility changes, we no longer update the timer for efficiency.
+            onVisibilityChanged() {
+                if (document.hidden || document.mozHidden || document.webkitHidden || document.msHidden) {
+                    // Tab is not visible, don't do anything.
+                    clearInterval(this.timerInterval);
+                } else {
+                    // Set interval again.
+                    this.timerInterval = setInterval(this.updateCountDown.bind(this), 1000);
+                    this.updateCountDown();
+                }
+            }
+            startCountDown() {
+                document.addEventListener("visibilitychange", this.onVisibilityChanged.bind(this), false);
+                document.addEventListener("mozvisibilitychange", this.onVisibilityChanged.bind(this), false);
+                document.addEventListener("webkitvisibilitychange", this.onVisibilityChanged.bind(this), false);
+                document.addEventListener("msvisibilitychange", this.onVisibilityChanged.bind(this), false);
+                this.onVisibilityChanged();
+            }
+            // Update the countdown every second.
+            updateCountDown() {
+                // Seconds from now until event.
+                let diff = this.targetTime - this.toUnixTs();
+                let text, result = [], started_showing = false;
+                if (diff > 0) {
+                    const t_size = [24 * 60 * 60, 60 * 60, 60, 1];
+                    const t_name = ['day', 'hour', 'minute', 'second'];
+                    for (var i in t_size) {
+                        // Get multiplier of current block, rounding down and deduct from rest.
+                        let cur_size = t_size[i];
+                        let multiplier = Math.floor(diff / cur_size);
+                        diff -= cur_size * multiplier;
+                        // If this value is higher than 0, or a previous value is already visible.
+                        if (multiplier > 0 || started_showing) {
+                            started_showing = true;
+                            // Add nice plural.
+                            let name = multiplier > 1 ? t_name[i] + "s" : t_name[i]
+                            result.push(multiplier.toString() + ' ' + name);
+                        }
+                        if (result.length === 2) { // If we have 2 fields, stop here.
+                            break;
+                        }
+                    }
+                    // How far is it in the future.
+                    text = "In " + result.join(', ');
+                } else {
+                    // If we're in the past don't update it anymore.
+                    clearInterval(this.timerInterval);
+                    text = "In the past...";
+                }
+                this.obj.countdown.innerText = text;
+            }
+
+            showForm() {
+                // If we have a date, set it.
+                if (this.targetDate) {
+                    let date = this.targetDate;
+                    this.obj.date.value = date.getFullYear() + "-" + this.getLz(date.getMonth() + 1) + "-" + this.getLz(date.getDate());
+                    this.obj.time.value = date.getHours() + ":" + this.getLz(date.getMinutes());
+                }
+                // If we have a title, set it.
+                if (this.targetTitle) {
+                    this.obj.title.value = this.targetTitle;
+                }
+                // Set timezone info.
+                this.setTimezoneInfo();
+
+                // Hide output, show form.
+                this.obj.form.style.display = "block";
+                this.obj.output.style.display = "none";
+                this.obj.form.addEventListener('submit', this.onSubmitForm.bind(this));
+            }
+
+            // Show current timezone and optional warning above.
+            setTimezoneInfo(warning) {
+                let text = "";
+                if (!!warning) {
+                    text += "<b>" + warning + "</b>";
+                }
+                text += "<div>Timezone: " + this.local.timeZone + "</div>";
+                this.obj.zone.innerHTML = text;
+            }
+
+            // Pressing share button.
+            onShare(e) {
+                e.preventDefault();
+                let message = this.obj.save_message;
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    message.style.visibility = 'visible';
+                }).catch((error) => {
+                    console.error('No access to clipboard? - ', error);
+                });
+            }
+            // Do redirect to edit form (currently unused).
+            doRedirect(date, title, edit) {
+                let params = new URLSearchParams();
+                params.set('ts', this.toUnixTs(date));
+                if (!!title) {
+                    params.set('title', title);
+                }
+                if (!!edit) {
+                    params.set('edit', 1);
+                }
+                window.location.search = "?" + params;
+            }
+            // Parse the values given, should already be blocked by 'required' flag.
+            onSubmitForm(e) {
+                e.preventDefault();
+                const d_val = this.obj.date.value;
+                const t_val = this.obj.time.value;
+                const title = this.obj.title.value.toString().trim();
+                if (!d_val || !t_val) {
+                    this.setTimezoneInfo("Please choose time and date.");
+                    return;
+                }
+                var date = Date.parse(d_val + ' ' + t_val);
+                if (date < Date.now()) {
+                    this.setTimezoneInfo("Please use a date in the future!");
+                    return;
+                }
+                this.doRedirect(date, title);
+            }
+            // Convert date object to unix timestamp (seconds).
+            toUnixTs(timestamp) {
+                if (!timestamp) {
+                    timestamp = Date.now();
+                }
+                return Math.floor(timestamp / 1000);
+            }
+            // Get number with leading zero if needed.
+            getLz(number) {
+                return number < 10 ? "0" + number : number;
+            }
+        }
+        easyTime = new EasyTime();
+    </script>
+    <!--
+        End of the easy time form and content.
+    -->
+</body>
+
+</html>
