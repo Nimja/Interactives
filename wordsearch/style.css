@@ -1,0 +1,212 @@
+:root {
+    --color-background: white;
+    --color-text: black;
+    --color-form-bg: #ddd;
+    --color-form-edge: #999;
+    --color-form-color: hsla(200, 100%, 50%, .2);
+}
+
+#wsg-game {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-size: 16px;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0px;
+    padding: 0px;
+}
+
+#wsg-loading {
+    width: 100%;
+    text-align: center;
+    margin: 100px 100px;
+    font-size: 32px;
+    color: #999;
+}
+
+#wsg-settings-holder {
+    overflow-y: scroll;
+    width: 100%;
+    height: 100%;
+}
+
+#wsg-game table {
+    border: 0px solid red;
+    border-collapse: collapse;
+    margin: 0px;
+    padding: 0px;
+}
+
+#wsg-game table td,
+#wsg-game table tr {
+    border: 0px solid red;
+    border-collapse: collapse;
+    vertical-align: top;
+    margin: 0px;
+    padding: 0px;
+}
+
+#wsg-words-landscape,
+#wsg-words-portrait {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0px;
+    margin-right: 40px;
+}
+
+#wsg-words-landscape p,
+#wsg-words-portrait p {
+    flex: 1;
+    margin: 0px;
+    padding: .3vw;
+    flex-grow: 0;
+}
+
+#wsg-words-landscape p s,
+#wsg-words-portrait p s {
+    opacity: .5;
+}
+
+#wsg-game select,
+#wsg-game input[type=submit],
+#wsg-game button {
+    border: 1px solid var(--color-form-edge);
+    background-color: var(--color-form-bg);
+    color: var(--color-text);
+
+    border-radius: 10px;
+    padding: 5px 10px;
+    margin: 10px;
+}
+
+#wsg-buttons button {
+    display: block;
+    position: fixed;
+    width: 30px;
+    height: 40px;
+    padding: 5px;
+    margin: 0px;
+    opacity: .5;
+    border-radius: 0px 0px 0px 10px;
+}
+
+#wsg-buttons #wsg-button-new {
+    height: 80px;
+    border-radius: 10px 0px 0px 0px;
+}
+
+.wsg-confetti {
+    background: red;
+    width: 5vw;
+    height: 1vw;
+    border-radius: .5vw;
+    position: fixed;
+    z-index: 3000;
+}
+
+#wsg-game .wsg-form {
+    margin: 10px;
+    border: 1px solid var(--color-form-edge);
+    padding: 10px;
+}
+
+#wsg-game div.wsg-form button {
+    display: block;
+    margin: 0px;
+    width: 100%;
+}
+
+#wsg-game .wsg-form-line {
+    margin: 10px 0px;
+    border-top: 1px solid var(--color-form-edge);
+    padding-top: 10px;
+}
+
+#wsg-game form label span {
+    opacity: .5;
+}
+
+#wsg-game form input {
+    border: 1px solid var(--color-form-edge);
+    background: var(--color-form-bg);
+    color: var(--color-text);
+    padding: 5px;
+}
+
+#wsg-game form textarea {
+    display: block;
+    width: 100%;
+    min-height: 300px;
+    height: auto;
+    border: 1px solid var(--color-form-edge);
+    background: var(--color-form-bg);
+    padding: 5px;
+}
+
+.slidecontainer {
+    width: 100%;
+}
+
+#wsg-game input[type='range'] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 30px;
+    border-radius: 5px;
+    background: var(--color-form-color);
+    outline: none;
+}
+
+#wsg-game input[type='range']:hover {
+    opacity: 1;
+}
+
+#wsg-game input[type='range']::-moz-range-progress,
+#wsg-game input[type='range']::-webkit-slider-runnable-track {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#wsg-game input[type='range']::-moz-range-thumb,
+#wsg-game input[type='range']::-webkit-slider-thumb,
+#wsg-game input[type='range']::slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 25px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--color-text);
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+@keyframes wsg-fadeout-info {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+#wsg-settings-info p {
+    margin: 0px;
+    padding: 0px;
+    text-align: center;
+    animation-name: wsg-fadeout-info;
+    animation-duration: 3s;
+    animation-iteration-count: 1;
+    opacity: 0;
+}
+.wsg-copyright {
+    text-align: center;
+    opacity: .5;
+}

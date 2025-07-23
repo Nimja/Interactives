@@ -1,0 +1,113 @@
+<!--
+    Created by Nimja - 07-2025
+    Word Search game that is mobile-friendly and a lot of fun.
+    Source: https://github.com/Nimja/Interactives
+-->
+<div>
+<h2>Information</h2>
+<div>
+    <button id="wsg-game-open">Open Game</button>
+</div>
+<p>Generate a grid of letters where words can be found. Select them from the starting or ending letter.</p>
+<ul>
+    <li>Words are striked through automatically as you find them.</li>
+    <li>Settings menu can manage word lists (or change the current one), grid size, darkmode, color.</li>
+    <li>Progress is kept through page reloads.</li>
+    <li>Selections have a 1 letter leeway in both directions. Selecting "stone" will auto-select "stones", as long as the starting point is correct.</li>
+    <li>Word lists are automatically filtered to:
+        <ul>
+            <li>Remove doubles or partial words (here is dropped in favor of where, for example).</li>
+            <li>Minimum word length of 4 letters.</li>
+            <li>Automatically change letters like &euml; to e.</li>
+        </ul>
+    </li>
+    <li>Game board is created by:
+        <ul>
+            <li>Attempt to connect a new word to any existing letter on the board.</li>
+            <li>Attempt to place a new word starting on an empty space.</li>
+        </ul>
+    </li>
+</ul>
+<p>On a technical side: localStorage is used for settings, indexedDB for word lists. All data is local, nothing is sent to the server.</p>
+</div>
+<div id="wsg-game">
+    <div id="wsg-buttons" style="display: none;">
+        <button id="wsg-button-settings">☰</button>
+        <button id="wsg-button-new">N<br />E<br />W</button>
+    </div>
+    <div id="wsg-settings-holder" style="display: none;">
+        <table>
+            <tr>
+                <td>
+                    <form id="wsg-settings-form" class="wsg-form">
+                        <div>
+                            <label for="dictionary">Dictionary</label>
+                            <select name="dictionary" id="wsg-settings-select"></select>
+                        </div>
+                        <div id="wsg-settings-name">
+                            <label for="name">Name</label>
+                            <input name="name" type="text" placeholder="Name of this set" autocomplete="false" id="wsg-settings-name-input" />
+                        </div>
+                        <div>
+                            <label for="words">Words</label>
+                            <textarea name="words" id="wsg-settings-input" placeholder="Whole words, separated by any non-letter.&#10;Doubles and partials are removed.&#10;Minimum 3 letters"></textarea>
+                        </div>
+                        <div>
+                            <span id="wsg-settings-buttons">
+                                <input type="submit" name="submit" value="save" />
+                                <input type="submit" name="submit" value="delete" />
+                            </span>
+                            <input type="submit" name="submit" value="copy" />
+                        </div>
+                        <div id="wsg-settings-info"></div>
+                    </form>
+                </td>
+                <td>
+                    <div class="wsg-form">
+                        <div>
+                            <button id="wsg-button-resume">Resume play</button>
+                        </div>
+                        <div class="wsg-form-line">
+                            <label for="gridSize">Grid size: </label>
+                            <select name="gridSize" id="wsg-settings-gridsize"></select>
+                        </div>
+                        <div class="wsg-form-line">
+                            <button id="wsg-button-darkmode">◐ Toggle dark mode</button>
+                        </div>
+                        <div class="wsg-form-line">
+                            <label for="color">Color</label>
+                            <input name="color" type="range" id="wsg-settings-color" min="0" max="360" value="200" step="10" />
+                        </div>
+                        <div class="wsg-form-line">
+                            <button id="wsg-button-default">Restore defaults.</button>
+                        </div>
+                    </div>
+                    <div class="wsg-copyright">
+                        <button id="wsg-game-close">Close game</button><br />
+                        <a href="https://nimja.com/other/interactive">Made by Nimja</a><br />
+                        <a href="https://github.com/Nimja/Interactives/tree/main/wordsearch">Source on Github</a>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+    <table id="wsg-game-holder" style="display: none;">
+        <tr>
+            <td id="wsg-focus">
+                <div id="wsg-loading">Loading...</div>
+                <canvas id="wsg-board"></canvas>
+            </td>
+            <td id="wsg-landscape">
+                <div id="wsg-words-landscape"></div>
+            </td>
+        </tr>
+        <tr>
+            <td id="wsg-portrait" colspan="2">
+                <div id="wsg-words-portrait"></div>
+            </td>
+        </tr>
+    </table>
+</div>
+<link rel="stylesheet" href="./js/style.css">
+<script type="module" src="./js/main.js"></script>
