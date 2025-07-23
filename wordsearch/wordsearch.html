@@ -6,7 +6,7 @@
 <div>
 <h2>Information</h2>
 <div>
-    <button id="wsg-game-open">Open Game</button>
+    <button id="wsg-game-open">Back to game</button>
 </div>
 <p>Generate a grid of letters where words can be found. Select them from the starting or ending letter.</p>
 <ul>
@@ -66,7 +66,7 @@
                 <td>
                     <div class="wsg-form">
                         <div>
-                            <button id="wsg-button-resume">Resume play</button>
+                            <button id="wsg-button-default">Restore defaults</button>                            
                         </div>
                         <div class="wsg-form-line">
                             <label for="gridSize">Grid size: </label>
@@ -80,18 +80,17 @@
                             <input name="color" type="range" id="wsg-settings-color" min="0" max="360" value="200" step="10" />
                         </div>
                         <div class="wsg-form-line">
-                            <button id="wsg-button-default">Restore defaults.</button>
+                            <button id="wsg-button-resume">Resume play</button>
                         </div>
-                    </div>
-                    <div class="wsg-copyright">
-                        <button id="wsg-game-close">Close game</button><br />
-                        <a href="https://nimja.com/other/interactive">Made by Nimja</a><br />
-                        <a href="https://github.com/Nimja/Interactives/tree/main/wordsearch">Source on Github</a>
                     </div>
                 </td>
             </tr>
         </table>
-
+        <div class="wsg-copyright">
+            <button id="wsg-game-close">More info</button><br />
+            <a href="https://nimja.com/other/interactive">Made by Nimja</a><br />
+            <a href="https://github.com/Nimja/Interactives/tree/main/wordsearch">Source on Github</a>
+        </div>
     </div>
     <table id="wsg-game-holder" style="display: none;">
         <tr>

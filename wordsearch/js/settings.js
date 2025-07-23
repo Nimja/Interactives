@@ -95,6 +95,7 @@ export class Settings {
         this.setGridSize(this.getSetting(SETTING_GRID));
         this.resize();
         this.dictionaries = new Dictionaries(this);
+        this.onOpenClose(true);
         this.ensurePlaying();
     }
 
@@ -406,6 +407,11 @@ export class Settings {
         this.showSettings();
         this.isOpen = isOpen;
         this.setVisible(this.el.main, this.isOpen);
+        if (this.isOpen) {
+            document.body.parentElement.style.overflow = 'hidden'; // Disable scrolling on top.
+        } else {
+            document.body.parentElement.style.overflow = '';
+        }
     }
 
     onBoardUpdated() {
