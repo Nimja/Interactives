@@ -372,7 +372,12 @@ export class Settings {
     resize() {
         let w = window.innerWidth;
         let h = window.innerHeight;
-        let size = Math.min(w, h);
+        let menuWidth = 30 + 10;
+        let menuHeight = 40 + 80 + 20;
+        let isLandscape = w > h;
+        let cw = isLandscape ? w - menuHeight : w;
+        let ch = !isLandscape ? h - menuHeight : h;
+        let size = Math.min(cw, ch);
         this.board.resize(size);
         this.el.focus.style.width = size + 'px';
         this.el.focus.style.height = size + 'px';
@@ -422,5 +427,5 @@ export class Settings {
     }
 }
 
-// Init settings that will start everything :)
+// Init settings that will start everything.
 export var settings = new Settings();

@@ -60,12 +60,15 @@
     gap: 0px;
     margin-right: 40px;
 }
+#wsg-words-portrait {
+    margin-left: 10px;
+}
 
 #wsg-words-landscape p,
 #wsg-words-portrait p {
     flex: 1;
     margin: 0px;
-    padding: .3vw;
+    padding: 1px;
     flex-grow: 0;
 }
 
@@ -206,6 +209,7 @@
     animation-iteration-count: 1;
     opacity: 0;
 }
+#wsg-game-close,
 .wsg-copyright {
     text-align: center;
     opacity: .5;
