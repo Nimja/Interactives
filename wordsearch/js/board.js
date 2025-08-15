@@ -55,6 +55,7 @@ export class Board {
         this.textColor = this.isDark ? 'white' : 'black';
         let fade = this.isDark ? .3 : .2;
         this.lineFill = "hsla(" + this.hue.toString() + ", 100%, 50%, " + fade + ")";
+        this.lineDark = "hsla(" + this.hue.toString() + ", 100%, 50%, 1)";
         this.lineEdge = "hsla(" + this.hue.toString() + ", 100%, 50%, " + (fade + .3) + ")";
     }
 
@@ -84,6 +85,7 @@ export class Board {
         });
         this.fillRest(data.letters);
         this.render();
+        this.updateWordList();
     }
 
 
@@ -296,7 +298,8 @@ export class Board {
             }
         });
         WordFilter.sortAlphaObj(this.words, 'word');
-        this.fillRest();
+        let word = this.getUnusedWordOfLength(this.emptySquares.length);
+        this.fillRest(word ? word.getLetters() : false);
         this.render();
         this.updateWordList();
     }
@@ -349,6 +352,16 @@ export class Board {
             }
         }
         return false;
+    }
+
+    getUnusedWordOfLength(length) {
+        // Get unused words of the right length.
+        let words = this.words.filter((word) => { return (word.length == length && !word.placed); });
+        if (words.length == 0) {
+            return false; // No word found.
+        }
+        words = shuffle(words);
+        return words[0];
     }
 
     indexToCoord(i) {
@@ -494,5 +507,17 @@ export class Board {
             prev: Date.now(),
             confetti: [],
         };        
+    }
+    solve() {
+        if (this.isCompleted) {
+            return;
+        }
+        this.words.forEach((word) => {
+            if (word.placed) {
+                word.marked = true;
+            }
+        });
+        this.render();
+        this.updateWordList();
     }
 }

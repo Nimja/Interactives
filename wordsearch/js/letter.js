@@ -1,5 +1,8 @@
 import { DIR_NUMBER, reverseDir, STATE_START, STATE_MIDDLE, STATE_END } from "./global.js";
 
+/**
+ * Contain a letter for the grid.
+ */
 export class Letter {
     constructor(letter) {
         this.update(letter);
@@ -21,7 +24,15 @@ export class Letter {
         this.letter = this.isBlank ? '' : this.formatLetter(letter);
         return this.isBlank;
     }
-    addDir(word, dir, state, checkOnly) { // State is 1 for start, 2 for middle and 3 for end.
+    /**
+     * Add a direction, as a check or final.
+     * @param {Word} word 
+     * @param {Number} dir 
+     * @param {Number} state Which part of the word this letter is (1=start, 2=middle, 3=end)
+     * @param {Boolean} checkOnly 
+     * @returns 
+     */
+    addDir(word, dir, state, checkOnly) {
         let rdir = reverseDir(dir);
         var checkdirs = [];
         if (state == STATE_START || state == STATE_MIDDLE) {

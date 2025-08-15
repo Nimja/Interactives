@@ -12,6 +12,7 @@
 <ul>
     <li>Click/tap and drag to highlight a word from the list.</li>
     <li>Words in the list are struck through automatically as you mark them.</li>
+    <li>The left-over letters might spell a word!</li>
     <li>Settings menu can manage word lists (or change the current one), grid size, darkmode, color.</li>
     <li>Progress is kept through page reloads.</li>
     <li>Selections have a 1 letter leeway in both directions. Selecting "stone" will auto-select "stones", as long as the starting point is correct.</li>
@@ -26,6 +27,7 @@
         <ul>
             <li>Attempt to connect a new word to any existing letter on the board.</li>
             <li>Attempt to place a new word starting on an empty space.</li>
+            <li>After exhausting the word list, attempt fill the empty spaces with an unused word.</li>
         </ul>
     </li>
 </ul>
@@ -33,7 +35,7 @@
 </div>
 <div id="wsg-game">
     <div id="wsg-buttons" style="display: none;">
-        <button id="wsg-button-settings">☰</button>
+        <button id="wsg-button-settings"></button>
         <button id="wsg-button-new">N<br />E<br />W</button>
     </div>
     <div id="wsg-settings-holder" style="display: none;">
@@ -51,7 +53,7 @@
                         </div>
                         <div>
                             <label for="words">Words</label>
-                            <textarea name="words" id="wsg-settings-input" placeholder="Whole words, separated by any non-letter.&#10;Doubles and partials are removed.&#10;Minimum 3 letters"></textarea>
+                            <textarea name="words" id="wsg-settings-input" placeholder="Whole words, separated by any non-letter.&#10;Doubles and partials are removed.&#10;Minimum 4 letters"></textarea>
                         </div>
                         <div>
                             <span id="wsg-settings-buttons">

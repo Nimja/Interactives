@@ -1,9 +1,12 @@
+@charset "UTF-8";
+
 :root {
     --color-background: white;
     --color-text: black;
     --color-form-bg: #ddd;
     --color-form-edge: #999;
     --color-form-color: hsla(200, 100%, 50%, .2);
+    --color-button-glow: hsla(200, 100%, 50%, 1);
 }
 
 #wsg-game {
@@ -89,20 +92,41 @@
     margin: 10px;
 }
 
+#wsg-game #wsg-settings-select {
+    display: block;
+    width: 100%;
+    margin: 0px 0px 10px 0px;
+}
+
 #wsg-buttons button {
     display: block;
     position: fixed;
     width: 30px;
     height: 40px;
-    padding: 5px;
+    padding: 0px;
     margin: 0px;
     opacity: .5;
     border-radius: 0px 0px 0px 10px;
 }
 
+
+#wsg-buttons #wsg-button-settings {
+    padding: 0px;
+    font-size: 30px;
+}
+#wsg-buttons #wsg-button-settings:before {
+    content: '☰';
+    display: block;
+    text-align: center;
+    margin-top: -7px;
+    width: 30px;
+    height: 40px;
+    padding: 0px;
+}
 #wsg-buttons #wsg-button-new {
     height: 80px;
     border-radius: 10px 0px 0px 0px;
+    padding-top: 5px;
 }
 
 .wsg-confetti {
@@ -198,6 +222,25 @@
     to {
         opacity: 0;
     }
+}
+
+@keyframes wsg-button-glow {
+    from {
+        opacity: 1;
+        box-shadow: 0px 0px 2px 2px var(--color-button-glow);
+    }
+
+    to {
+        opacity: .5;
+        box-shadow: 0px 0px 0px 0px var(--color-button-glow);
+    }
+}
+
+.wsg-button-glow {
+    animation-name: wsg-button-glow;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
 }
 
 #wsg-settings-info p {

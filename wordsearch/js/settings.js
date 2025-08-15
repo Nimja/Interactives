@@ -1,13 +1,19 @@
 import { Board } from "./board.js";
 import { WordFilter } from "./wordfilter.js";
 import { Dictionaries } from "./dictionaries.js";
-import { DEFAULT_DICTIONARY, DEFAULT_GRIDSIZE, DEFAULT_COLOR, GRID_SIZE_MIN, GRID_SIZE_MAX } from "./global.js";
+import { DEFAULT_DICTIONARY, DEFAULT_GRIDSIZE, DEFAULT_COLOR, GAME_DEMO, GRID_SIZE_MIN, GRID_SIZE_MAX } from "./global.js";
 
-const SETTING_BOARD = 'board';
-const SETTING_MODE = 'mode';
-const SETTING_COLOR = 'color';
-const SETTING_GRID = 'grid';
-const SETTING_DICTIONARY = 'dictionary';
+const SETTING_BOARD = 'wsg.board';
+const SETTING_MODE = 'wsg.mode';
+const SETTING_COLOR = 'wsg.color';
+const SETTING_GRID = 'wsg.grid';
+const SETTING_BUTTON = 'wsg.button';
+const SETTING_DICTIONARY = 'wsg.dictionary';
+
+const BUTTON_MENU = 'menu';
+const BUTTON_NEW = 'new';
+const BUTTON_WORDS = 'words';
+
 
 const FORM_METHOD_SAVE = 'save';
 const FORM_METHOD_DELETE = 'delete';
@@ -97,6 +103,9 @@ export class Settings {
         this.dictionaries = new Dictionaries(this);
         this.onOpenClose(true);
         this.ensurePlaying();
+
+        this.addButtonGlow(this.el.buttonSettings, BUTTON_MENU);
+        this.addButtonGlow(this.el.formSelect, BUTTON_WORDS);
     }
 
     initialLoad() {
@@ -104,6 +113,22 @@ export class Settings {
         if (this.board.words.length === 0) {
             this.onNew();
         }
+    }
+
+    addButtonGlow(el, name) {
+        let cur = this.getSetting(SETTING_BUTTON);
+        if (!cur || !cur[name]) {
+            el.classList.add("wsg-button-glow");
+        }
+    }
+    removeButtonGlow(el, name) {
+        let cur = this.getSetting(SETTING_BUTTON);
+        if (!cur) {
+            cur = {};
+        }
+        cur[name] = true;
+        this.saveSetting(SETTING_BUTTON, cur);
+        el.classList.remove("wsg-button-glow");
     }
 
     ensurePlaying() {
@@ -119,6 +144,7 @@ export class Settings {
         this.board.setGridSize(this.gridSize, this.gridSize);
         this.board.startGame(this.getCurrentDictionary().words);
         this.saveSetting(SETTING_BOARD, this.board.serialize());
+        this.removeButtonGlow(this.el.buttonNew, BUTTON_NEW);
     }
 
     getCurrentDictionary() {
@@ -134,6 +160,11 @@ export class Settings {
             return false;
         }
         if (this.dictionaries.isExisting(name)) {
+            // If changing.
+            if (name != DEFAULT_DICTIONARY) {
+                this.removeButtonGlow(this.el.formSelect, BUTTON_WORDS);
+            }
+            // Set current dictionary.
             this.currentDictionary = name;
             this.saveSetting(SETTING_DICTIONARY, name);
             this.el.formSelect.value = this.currentDictionary;
@@ -154,6 +185,8 @@ export class Settings {
         if (this.isPlaying) { // Go back to board.
             this.updateOrientationVisibility();
         } else { // Show settings.
+            // Remove button glow.
+            this.removeButtonGlow(this.el.buttonSettings, BUTTON_MENU);
             // Clear options.
             this.el.formSelect.innerHTML = '';
             // Add default/new option.
@@ -286,6 +319,9 @@ export class Settings {
         this.setColor(this.el.optionColor.value);
     }
     onRestoreDefaults() {
+        if (this.gridSize === 6) {
+            this.board.unserialize(GAME_DEMO);
+        }
         this.setGridSize(DEFAULT_GRIDSIZE);
         this.setDarkMode(false);
         this.setColor(DEFAULT_COLOR);
@@ -347,6 +383,7 @@ export class Settings {
         this.el.optionColor.value = hue;
         this.board.setColor(hue);
         document.body.style.setProperty("--color-form-color", this.board.lineFill);
+        document.body.style.setProperty("--color-button-glow", this.board.lineDark);
         this.saveSetting(SETTING_COLOR, this.hue);
         this.board.render();
         return true;
@@ -369,11 +406,13 @@ export class Settings {
         this.setVisible(this.portrait.holder, !this.isLandscape);
     }
 
+    /**
+     * Called every time the window changes (also landscape/portrait)
+     */
     resize() {
         let w = window.innerWidth;
         let h = window.innerHeight;
-        let menuWidth = 30 + 10;
-        let menuHeight = 40 + 80 + 20;
+        let menuHeight = 40 + 80 + 20; // Height of the sidebar menu, also used as space for the words.
         let isLandscape = w > h;
         let cw = isLandscape ? w - menuHeight : w;
         let ch = !isLandscape ? h - menuHeight : h;
@@ -423,9 +462,15 @@ export class Settings {
         this.saveSetting(SETTING_BOARD, this.board.serialize());
         if (this.board.isCompleted) {
             this.board.showWin();
+            this.addButtonGlow(this.el.buttonNew, BUTTON_NEW);
         }
+    }
+
+    solve() {
+        this.board.solve();
     }
 }
 
 // Init settings that will start everything.
 export var settings = new Settings();
+globalThis.settings = settings;

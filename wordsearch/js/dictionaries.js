@@ -19,7 +19,7 @@ export class Dictionaries {
 
         const request = indexedDB.open(SETTING_DB_NAME);
         request.onerror = (event) => {
-            console.log(event);
+            console.log("Error loading indexedDB", event);
         }
         request.onsuccess = (event) => {
             this.db = event.target.result;

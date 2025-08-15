@@ -1,3 +1,5 @@
+export const MIN_WORD_LENGTH = 4;
+
 export class WordFilter {
     static cleanString(string) {
         // Normalize, replacing accented characters with their simple forms.
@@ -30,8 +32,8 @@ export class WordFilter {
         let max = check.length - 1
         for (let i = 0; i < max; i++) {
             let word = check[i];
-            if (word.length < 4) {
-                continue; // Min word length = 3.
+            if (word.length < MIN_WORD_LENGTH) {
+                continue;
             }
             let isFound = false;
             for (let r = (i + 1); r < check.length; r++) {

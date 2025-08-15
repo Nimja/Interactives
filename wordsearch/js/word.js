@@ -17,7 +17,7 @@ export class Word {
     static unserialize(board, data) {
         let word = new Word(data.w);
         if (!word.attemptPlace(board, data.i, data.d, 0)) {
-            console.log(data, board.indexToCoord(data.i));
+            console.log("Failed to place word back:", data, board.indexToCoord(data.i));
         }
         word.marked = data.m > 0;
         return word;
@@ -27,6 +27,14 @@ export class Word {
         return this.word[index].toUpperCase();
     }
 
+    getLetters() {
+        return this.word.toUpperCase().split("");
+    }
+
+    /**
+     * Attempt to place a word on the board, checking and placing if successful.
+     * @returns Boolean
+     */
     attemptPlace(board, index, dir, offset) {
         let c = board.indexToCoord(index);
         c.move(reverseDir(dir), offset);
