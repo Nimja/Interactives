@@ -195,22 +195,22 @@ export class Settings {
             let names = this.dictionaries.getNames();
             // Add standard ones.
             let optgroup = document.createElement("optgroup");
-            optgroup.label = '─── standard ───'
+            optgroup.label = '── standard (words) ──'
             names.forEach((name) => {
                 let dict = this.dictionaries.getDictionary(name);
                 if (!dict.custom) {
-                    this.makeOption(optgroup, name, name);
+                    this.makeOption(optgroup, name, name + " (" + dict.words.length + ")");
                 }
             });
             this.el.formSelect.add(optgroup);
             // this.makeOption(this.el.formSelect, '', '─── custom ───', true);
             // Add custom ones.
             optgroup = document.createElement("optgroup");
-            optgroup.label = '─── custom ───'
+            optgroup.label = '── custom (words) ──'
             names.forEach((name) => {
                 let dict = this.dictionaries.getDictionary(name);
                 if (dict.custom) {
-                    this.makeOption(optgroup, name, name);
+                    this.makeOption(optgroup, name, name + " (" + dict.words.length + ")");
                 }
             });
             if (optgroup.children.length) {
